@@ -96,7 +96,7 @@ class ATEMProtocol:
     stillBanks = ATEMStillBanks()
     switcherPortTypes = ATEMSwitcherPortTypes()
     transitionStyles = ATEMTransitionStyles()
-    nexTransitionKeys = ATEMNextTransistionKeys()
+    nextTransitionKeys = ATEMNextTransistionKeys()
     videoModeFormats = ATEMVideoModeFormats()
     videoSources = ATEMVideoSources()
     windows = ATEMWindows()
