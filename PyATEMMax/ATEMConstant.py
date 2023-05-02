@@ -83,7 +83,7 @@ class ATEMConstantList:
                 raise ATEMException(f"Wrong value for {self.__class__.__name__}: [{item}] ({type(item)})")
             else:
                 key = found.name
-
+        # print(self._value[key])
         return self._values[key]     # retval hit TypeValue o como sea de typing
 
 

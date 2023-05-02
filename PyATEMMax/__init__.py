@@ -11,3 +11,7 @@ from .ATEMProtocol import ATEMProtocol
 from .ATEMProtocolEnums import *
 from .ATEMException import ATEMException
 from . import StateData
+
+
+def test():
+    print("well hello there")
