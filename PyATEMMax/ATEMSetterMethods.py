@@ -278,12 +278,13 @@ class ATEMSetterMethods():
         """
 
         mE_val = self.atem.mixEffects[mE].value
-        print("#"*100)
-        print(nextTransition)
-        print(self.atem.nextTransitionKeys[nextTransition])
-        print("#"*100)
-        nextTransition_val = self.atem.nextTransitionKeys[nextTransition].value
-
+        # print("#"*100)
+        # print(nextTransition)
+        # print(self.atem.nextTransitionKeys[nextTransition])
+        # print("#"*100)
+        # nextTransition_val = self.atem.nextTransitionKeys[nextTransition].value
+        nextTransition_val = nextTransition
+        
         indexMatch:bool = self.switcher._outBuf.getU8(1) == mE_val
 
         self.switcher._prepareCommandPacket("CTTp", 4, indexMatch)
