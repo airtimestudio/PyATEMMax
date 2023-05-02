@@ -278,7 +278,7 @@ class ATEMSetterMethods():
         """
 
         mE_val = self.atem.mixEffects[mE].value
-        nextTransition_val = self.atem.transitionStyles[nextTransition].value
+        nextTransition_val = self.atem.nexTransitionKeys[nextTransition].value
 
         indexMatch:bool = self.switcher._outBuf.getU8(1) == mE_val
 
