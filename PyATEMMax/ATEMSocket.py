@@ -10,6 +10,7 @@ from typing import Any, List, Optional, Union
 
 import socket
 import logging
+from re import findall
 
 from .ATEMProtocol import ATEMProtocol
 from .ATEMUtils import hexStr
@@ -38,7 +39,10 @@ class ATEMUDPSocket():
         self.connected = False
 
         self._buffer = []
-
+        self.record_timer = {"hour":0, "minutes":0, "seconds":0}
+        self.disk_stat    = False
+        self.record_stat  = False
+        
 
     def connect(self, ip: str) -> None:
         """
@@ -93,10 +97,187 @@ class ATEMUDPSocket():
 
         if data:
             self._buffer.extend(data)
+            # print(data)
+            self.AtemStatus(data)
             self.log.debug(f"Received {len(data)} new bytes [{hexStr(data)}] - " \
                             f" {self.available()} bytes available")
 
         return self.available()
+
+    def AtemStatus(self, data):
+
+            commands = {
+                "RTMS": "record_update",
+                "RTMR": "Recording Duration",
+                "RTMD": "disk_update",
+                "RMSu": "record settings"
+            }
+            for command in commands:
+                index = data.find(bytes(command, 'utf-8'))
+                if(index != -1):
+                    start = index + 4
+                    if(command == "RTMS"):
+                        end = 12
+                        rtms_data  = data[start: index+end]
+                        start = 0
+                        end   = 2
+                        rec_status = rtms_data[start:end]
+                        # print(rtms_data)
+                        rec_status = int.from_bytes(rec_status, byteorder='big')
+                        raw_rec  = rec_status
+                        rec_status = self.__RecordingErrors(rec_status) or rec_status
+                        print("*************************** Media Status ***************************")
+                        print("rec status" , rec_status, raw_rec)
+                        print("*************************** Media Status ***************************")
+                        self.record_stat = rec_status
+                        rec_time_left = rtms_data[4:8]
+                        rec_time_left = int.from_bytes(rec_time_left, byteorder='big')/60
+                        print("time left", rec_time_left)
+                        # print(rec_status[1] << 4)           
+
+                    if(command == "RTMD"):
+                        
+                        RTMD_LIST = []
+
+                        count = data.count(bytes(command, 'utf-8'))
+                        end   = 24
+                        indices = [i for i in range(len(data)) if data.startswith(bytes(command, 'utf-8'), i)]
+
+                        # print(indices)
+                        # print("$$"* 100)
+                        for i in indices:
+                            temp = data[i:i+32]
+                            RTMD_LIST.append(temp)
+                            # print(data[i:i+32])
+                            # print("--"* 100)
+                        # print("##"*100)
+                        for i in RTMD_LIST:
+                            try:
+                                start = 0+4
+                                end   = start+4
+                                disk_id   = i[start:end]
+                                start = end
+                                end   = end + 4
+                                disk_time = i[start:end]
+                                start = end
+                                end   = end + 2
+                                disk_stat = i[start:end]
+                                is_del    = i[start+1:end]
+
+                                start = end
+                                end   = 26
+
+                                volume_name = i[start:end]
+                                disk_time   = int.from_bytes(disk_time, byteorder='big')/60
+                                delete_flag = 1<<5
+                                disk_stat   = int.from_bytes(disk_stat, byteorder='big', signed="True")
+                                value       = disk_stat
+                                is_del      = bool.from_bytes(is_del, byteorder='big' )
+                                is_delete   = (value & delete_flag) == delete_flag
+                                status      = value & (~delete_flag)
+
+                                out_status  = status | (delete_flag if is_delete else 0 )
+
+                                # if(not is_delete):
+                                #     print("raw stat", disk_stat)
+                                #     print("is del", is_del)
+                                #     print("is_delete", is_delete)
+                                #     print("input status", status)
+                                #     print("out status", self.__diskStates(out_status))
+                                #     self.disk_stat = self.__diskStates(out_status)
+                                #     # print("DISK STATUS",  self.__diskStates(status))
+                                #     print("disk time", disk_time)
+                                #     print("volume name", volume_name.decode())
+                            except Exception as e:
+                                print(e)
+
+
+                        # end = 10*8
+                        # rtmd_data = data[start: index+end]
+                        # print(rtmd_data)
+                        # start = 0
+                        # end   = 4
+                        # disk_id   = rtmd_data[start:end]
+                        # start = end
+                        # end   = end + 4
+                        # disk_time = rtmd_data[start:end]
+                        # start = end
+                        # end   = end + 2
+                        # disk_stat = rtmd_data[start:end]
+                        
+                        # start = end
+                        # end   = 22
+                        # volume_name = rtmd_data[start:end]
+                        # # print("RTMD:", rtmd_data)
+                        # disk_time = int.from_bytes(disk_time, byteorder='big')/60
+                        # ds = disk_stat
+                        # disk_stat = int.from_bytes(disk_stat, byteorder='big', signed="True")
+
+                        # print("%%"*100)
+                        # print("full data", data)
+                        # print("raw disk stat", ds)
+                        # print("Disk Stats", self.__diskStates(disk_stat))
+                        # print("disk time", disk_time)
+                        # print("volume name", volume_name.decode())
+                        # print("%%"*100)
+                        
+                    if(command == "RTMR"):
+                        end = 8
+                        rmtr_data = data[start: index+end]
+                        rec_hour     = rmtr_data[0:1]
+                        rec_hour     = int.from_bytes(rec_hour, byteorder='big')
+                        rec_minutes  = rmtr_data[1:2]
+                        rec_minutes  = int.from_bytes(rec_minutes, byteorder='big')
+                        rec_seconds  = rmtr_data[2:3]
+                        rec_seconds  = int.from_bytes(rec_seconds, byteorder='big')
+
+                        self.record_timer['hour']    = rec_hour
+                        self.record_timer['minutes'] = rec_minutes
+                        self.record_timer['seconds'] = rec_seconds
+
+                        if(rec_seconds > 2):
+                            self.record_stat = True
+                        else:
+                            self.record_stat = False
+                        # print("record Timer", rec_hour, rec_minutes, rec_seconds)
+
+                    if(command == "RMSu"):
+                        print("record settings")                        
+
+    def __RecordingErrors(self, state):
+        data = {
+            0     : "No media", 
+            2     : False,
+            4     : "media full",
+            8     : "media error",
+            16    : "media unformatted",
+            32    : "Dropping frames",
+            32768 : "unknown"  
+        }
+        if(state in data):
+            return data[state]
+        return "unknown"
+
+    def __recordingStatus(self, state):
+        data = {
+            0   : "idle",
+            1   : "recording",
+            128 : "stopping"
+        }
+        if(state in data):
+            return data[state]
+        return "unknown"
+
+    def __diskStates(self, state):
+        data = {
+            1:"idle",
+            2:"unformatted",
+            4:"active",
+            8:"recording"
+        }
+        if(state in data):
+            return data[state]
+        return "unknown"
 
 
     def available(self):

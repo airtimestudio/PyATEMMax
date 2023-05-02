@@ -77,6 +77,11 @@ class ATEMProtocol:
     dVETransitionStyles = ATEMDVETransitionStyles()
     dsks = ATEMDSKs()
     externalPortTypes = ATEMExternalPortTypes()
+    fairlightMixerInputMixOptions = ATEMFairlightMixerInputMixOptions()
+    fairlightMixerInputTypes = ATEMFairlightMixerInputTypes()
+    fairlightMixerSourceTypes = ATEMFairlightMixerSourceTypes()
+    fairlightEQFilters = ATEMFairlightEQFilters()
+    fairlightEQFrequencyRanges = ATEMFairlightEQFrequencyRanges()
     keyers = ATEMKeyers()
     keyerTypes = ATEMKeyerTypes()
     keyFrames = ATEMKeyFrames()
@@ -106,7 +111,6 @@ class ATEMProtocol:
         "RMsp" : "wha??",
         "RMSP" :"OKAY", 
         "TCCc" : "time things?",
-
         "_ver": 'Protocol Version',
         "_pin": 'Product Id',
         "Warn": 'Warning',
@@ -169,16 +173,17 @@ class ATEMProtocol:
         "AMTl": 'Audio Mixer Tally',
         "TlIn": 'Tally By Index',
         "TlSr": 'Tally By Source',
+
+        # Fairlight audio engine commands
+        'FASP': 'Fairlight Audio Mixer Input',
+        'AEBP': "Fairlight Audio Input EQ Bands",
+        'FAMP': 'Fairlight Audio Mixer Master',
+        'AMBP': "Fairlight Audio Master EQ Bands",
+        # 'FMLv': "Fairlight Audio Input Level",
+        # 'FMTl': 'Fairlight Tally Command',
+
         "Time": 'Last State Change Time Code',
-        'LKST': 'Lock State',
-        'PLCK': 'Acquire Media Lock',
-        'LKOB': 'Lock Obtained',
-        'LOCK': 'Set Lock State',
-        'FTDE': 'Data Transfer Error',
-        'FTUA': 'Data Transfer Ack',
-        'FTSD': 'Data Transfer to Switcher',
-        'FTSU': 'Data Transfer Request',
-        'RXMS': 'HyperDeck Settings Get',
+        'InCm': 'Initialization Complete',
 
         # These commands are not really unknown,
         #   but they are not implemented
@@ -186,18 +191,40 @@ class ATEMProtocol:
         # Documented as (?) in Skårhøj's protocol definition
         "CCdo": "Not implemented: Camera Control Options(?)",
 
-        # Possibly from future versions of the protocol / not found in Skårhøj's protocol
+        # Possibly from future versions of the protocol
         '_DVE': 'Not implemented: _DVE',
         'AMHP': 'Not implemented: AMHP',
         'AMPP': 'Not implemented: AMPP',
         'ATMP': 'Not implemented: ATMP',
-        'CAMI': 'Not implemented: Audio Mixer Input',
-        'CAMM': 'Not implemented: Audio Mixer Master',
-        'CAMm': 'Not implemented: Audio Mixer Monitor',
-        'CAuS': 'Not implemented: Aux Source',
-        'CClV': 'Not implemented: Color Generator',
-        'CCmd': 'Not implemented: Camera Control',
         'CCst': 'Not implemented: CCst',
+        'LKST': 'Not implemented: LKST',
+        'MMOP': 'Not implemented: MMOP',
+        'MvVM': 'Not implemented: MvVM',
+        'PZCS': 'Not implemented: PZCS',
+        'RXCC': 'Not implemented: RXCC',
+        'RXCP': 'Not implemented: RXCP',
+        'RXMS': 'Not implemented: RXMS',
+        'RXSS': 'Not implemented: RXSS',
+        'SPtM': 'Not implemented: SPtM',
+        'SPZS': 'Not implemented: SPZS',
+        'TlFc': 'Not implemented: TlFc',
+        'TMIP': 'Not implemented: TMIP',
+        'V3sl': 'Not implemented: V3sl',
+        'VuMC': 'Not implemented: VuMC',
+        'VuMo': 'Not implemented: VuMo',
+
+        'SRcl': 'Not implemented: Clear Startup State',
+        'SRsv': 'Not implemented: Save Startup State',
+        'SALN': 'Not implemented: Audio Levels',
+        'SCPS': 'Not implemented: Clip Player',
+        'SFKF': 'Not implemented: Keyer Fly',
+        'SMPC': 'Not implemented: Set Media Player Clip Description',
+        'RAMP': 'Not implemented: Reset Audio Mixer Peaks',
+        'RFlK': 'Not implemented: Run Flying Key',
+        'MPSS': 'Not implemented: Media Player Source',
+        'MRCP': 'Not implemented: Macro Run Change Properties',
+        'MSlp': 'Not implemented: Macro Add Pause',
+        'MSRc': 'Not implemented: Macro Start Recording',
         'CDsC': 'Not implemented: Downstream Keyer',
         'CDsF': 'Not implemented: Downstream Keyer',
         'CDsG': 'Not implemented: Downstream Keyer',
@@ -246,31 +273,13 @@ class ATEMProtocol:
         'FTFD': 'Not implemented: Data File Description',
         'InCm': 'Not implemented: Initialization Completed',
         'MAct': 'Not implemented: Macro Action',
-        'MMOP': 'Not implemented: MMOP',
-        'MPSS': 'Not implemented: Media Player Source',
-        'MRCP': 'Not implemented: Macro Run Change Properties',
-        'MSlp': 'Not implemented: Macro Add Pause',
-        'MSRc': 'Not implemented: Macro Start Recording',
-        'MvVM': 'Not implemented: MvVM',
-        'PZCS': 'Not implemented: PZCS',
-        'RAMP': 'Not implemented: Reset Audio Mixer Peaks',
-        'RFlK': 'Not implemented: Run Flying Key',
-        'RXCC': 'Not implemented: RXCC',
-        'RXCP': 'Not implemented: RXCP',
-        'RXSS': 'Not implemented: RXSS',
-        'SALN': 'Not implemented: Audio Levels',
-        'SCPS': 'Not implemented: Clip Player',
-        'SFKF': 'Not implemented: Keyer Fly',
-        'SMPC': 'Not implemented: Set Media Player Clip Description',
-        'SPtM': 'Not implemented: SPtM',
-        'SPZS': 'Not implemented: SPZS',
-        'SRcl': 'Not implemented: Clear Startup State',
-        'SRsv': 'Not implemented: Save Startup State',
-        'TlFc': 'Not implemented: TlFc',
-        'TMIP': 'Not implemented: TMIP',
-        'V3sl': 'Not implemented: V3sl',
-        'VuMC': 'Not implemented: VuMC',
-        'VuMo': 'Not implemented: VuMo',
+        'CAMI': 'Not implemented: Audio Mixer Input',
+        'CAMM': 'Not implemented: Audio Mixer Master',
+        'CAMm': 'Not implemented: Audio Mixer Monitor',
+        'CAuS': 'Not implemented: Aux Source',
+        'CClV': 'Not implemented: Color Generator',
+        'CCmd': 'Not implemented: Camera Control',
+        
     }
 
 
@@ -335,4 +344,4 @@ class ATEMProtocol:
         if foundsrc is None:
             raise ATEMException(f"{source} ({type(source)}) is not a valid source")
 
-        return 
+        return foundsrc
